@@ -47,4 +47,8 @@ public class Vector {
 	public void setY(double y) {
 		this.y = y;
 	}
+	
+	public static double dot(Vector a, Vector b) {
+		return a.getX() * b.getX() + a.getY() * b.getY();
+	}
 }
