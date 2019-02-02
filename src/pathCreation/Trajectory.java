@@ -7,6 +7,7 @@ public class Trajectory {
 	private Point[] waypoints;
 	private double maxVel, maxAccel, k;
 	private double samplingRate = 1.0/50;
+	private double spacing = 0.5;
 	private double lastOutput = 0;
 	private Waypoint[] path;
 	
@@ -19,7 +20,7 @@ public class Trajectory {
 	
 	public void generatePath() {
 		ArrayList<Point> path = injectPoints();
-		path = smoother(path, .5, .5, 0.001);
+		path = smoother(path, 0.25, 0.75, 0.95);
 		Waypoint[] finalPath = new Waypoint[path.size()];
 		for(int i = 0; i < path.size(); i ++) {
 			finalPath[i] = new Waypoint(path.get(i).getX(), path.get(i).getY(), 0, 0, 0);
@@ -57,14 +58,16 @@ public class Trajectory {
 	}
 	
 	public ArrayList<Point> injectPoints() {
-		double spacing = 6;
 		ArrayList<Point> newPath = new ArrayList<Point>();
 		
 		for(int i = 0; i < waypoints.length - 1; i++) {
-			Vector vector = new Vector(waypoints[i+1], waypoints[i]);
+			Vector vector = new Vector(waypoints[i], waypoints[i+1]);
 			double numPointsThatFit = Math.ceil(vector.magnitude()/spacing);
+			vector = vector.normalize();
+			vector = vector.multiplyBy(spacing);
+			System.out.println(numPointsThatFit);
 			
-			for (int j = 0; i < numPointsThatFit; i++) {
+			for (int j = 0; j < numPointsThatFit; j++) {
 				double x = waypoints[i].getX() + vector.getX() * j;
 				double y = waypoints[i].getY() + vector.getY() * j;
 				newPath.add(new Point(x, y));	
@@ -74,7 +77,14 @@ public class Trajectory {
 		
 		return newPath;
 	}
-	
+	/**
+	 * 
+	 * @param path
+	 * @param a
+	 * @param b
+	 * @param tolerance
+	 * @return arrayList of points
+	 */
 	public ArrayList<Point> smoother(ArrayList<Point> path, double a, double b, double tolerance) {
 		ArrayList<Point> newPath = path;
 		
@@ -85,7 +95,7 @@ public class Trajectory {
 		
 		while(change >= tolerance) {
 			change = 0;
-			for(int i = 1; i < path.size(); i++) {
+			for(int i = 1; i < path.size() - 1; i++) {
 				origX = path.get(i).getX();
 				origY = path.get(i).getY();
 				
@@ -100,13 +110,17 @@ public class Trajectory {
 				
 				augX = newX + a*(origX-newX) + b*(lastX + nextX - (2*newX));
 				augY = newY + a*(origY-newY) + b*(lastY + nextY - (2*newY));
-				
+//				System.out.printf("x: %f%ny: %f%n", a*(origX-newX) + b*(lastX + nextX - (2*newX)),(origY-newY) + b*(lastY + nextY - (2*newY)));
 				newPath.set(i, new Point(augX, augY));
 				
-				deltaX = Math.abs(augX - newPath.get(i).getX());
-				deltaY = Math.abs(augY - newPath.get(i).getY());
+				deltaX = Math.abs(augX - newX);
+				deltaY = Math.abs(augY - newY);
+//				System.out.printf("i = %d%n  ^x: %f%n  ^y: %f%n", i, deltaX, deltaY);
+//				System.out.printf("i = %d, origX: %.2f, origY: %.2f, newX: %.4f, newY: %.4f, lastX: %.2f, lastY: %.2f, nextX: %.2f, nextY: %.2f, augX: %.4f, augY: %.4f, Delta X: %.4f, Delta Y: %.4f%n", 
+//						i, origX, origY, newX, newY, lastX, lastY, nextX, nextY, augX, augY, deltaX, deltaY);
 				
 				change += deltaX + deltaY;
+//				System.out.printf("  change: %f%n", change);
 			}
 		}
 		

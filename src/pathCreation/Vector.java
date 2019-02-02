@@ -24,6 +24,10 @@ public class Vector {
 		return Math.sqrt(x*x + y*y);
 	}
 	
+	public Vector multiplyBy(double m) {
+		return new Vector(x * m, y * m);
+	}
+	
 	public Vector normalize() {
 		double mag = magnitude();
 		Vector normal = new Vector(x, y);

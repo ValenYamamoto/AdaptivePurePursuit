@@ -13,9 +13,10 @@ public class Follower {
 	private double heading;
 	private double rightVel;
 	private double leftVel;
-	private double lastVel;
+	private double lastRightVel;
+	private double lastLeftVel;
 	private double lookaheadDistance;
-	private int lastIndex;
+	private double lastIndex;
 	private double trackWidth;
 	private double kp;
 	private double kv;
@@ -31,6 +32,8 @@ public class Follower {
 		this.heading = 0;
 		this.rightVel = 0;
 		this.leftVel = 0;
+		this.lastRightVel = 0;
+		this.lastLeftVel = 0;
 		this.kp = 0;
 		this.ka = 0;
 		this.kv = 0;
@@ -81,11 +84,22 @@ public class Follower {
 				double t1 = (-b - discriminant)/(2*a);
 				double t2 = (-b + discriminant)/(2*a);
 				
-				if ((t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1)) { // TODO: check index
-					double addx = t1 * roboRay.getX();
-					double addy = t1 * roboRay.getY();
-					
-					return new Point(start.getX() + addx, start.getY() + addy);
+				if (t1 >= 0 && t1 <= 1) { // TODO: check index
+					if (t1+i > lastIndex) {
+						double addx = t1 * roboRay.getX();
+						double addy = t1 * roboRay.getY();
+						
+						lastIndex = t1+i;
+						return new Point(start.getX() + addx, start.getY() + addy);
+					}
+				} else if (t2 >= 0 && t2 <= 1) {
+					if(t2+i > lastIndex) {
+						double addx = t2 * roboRay.getX();
+						double addy = t2 * roboRay.getY();
+						
+						lastIndex = t2+i;
+						return new Point(start.getX() + addx, start.getY() + addy);
+					}
 				}
 			}
 		}
@@ -127,7 +141,6 @@ public class Follower {
 		
 		double targetVel = findClosestPoint(x, y).getTargetVel();
 		targetVel = traj.rateLimiter(targetVel);
-		double accel = targetVel - lastVel;
 		
 		Point lookahead = findLookaheadPoint(x, y, heading);
 		double curv = getCurvatureToPoint(robotLocation, lookahead, heading);
@@ -138,14 +151,17 @@ public class Follower {
 		double rightTarget = getRightWheelSpeed(targetVel, signedCurvature);
 		double leftTarget = getLeftWheelSpeed(targetVel, signedCurvature);
 		
+		double rightAccel = rightTarget - lastRightVel;
+		double leftAccel = leftTarget - lastLeftVel;
+		
 		double rightError = rightVel - rightTarget;
 		double leftError = leftVel - leftTarget;
 		
 		double rightFeedback = rightError * kp;
 		double leftFeedback = leftError * kp;
 		
-		double rightFeedForward = ka* accel + kv * rightTarget;
-		double leftFeedForward = ka * accel + kv * leftTarget;
+		double rightFeedForward = ka* rightAccel + kv * rightTarget;
+		double leftFeedForward = ka * leftAccel + kv * leftTarget;
 		
 		double leftPower = leftFeedback + leftFeedForward;
 		double rightPower = rightFeedback + rightFeedForward;

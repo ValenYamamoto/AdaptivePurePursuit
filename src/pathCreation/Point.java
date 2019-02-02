@@ -3,6 +3,7 @@ package pathCreation;
 public class Point {
 	private double x;
 	private double y;
+	
 	public Point(double x, double y) {
 		this.x = x;
 		this.y = y;
@@ -25,7 +26,7 @@ public class Point {
 	}
 	
 	public String toString() {
-		String string =  String.format("X: %.2f, Y: %.2f", x, y); 
+		String string =  String.format("X: %.2f, Y: %.2f%n", x, y); 
 		return string;
 	}
 }

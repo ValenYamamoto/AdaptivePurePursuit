@@ -2,7 +2,7 @@ package pathCreation;
 
 public class Waypoint extends Point{
 
-	private double x, y, distance, targetVel, curv;
+	private double distance, targetVel, curv;
 	
 	public Waypoint(double x, double y, double distance, double targetVel,
 			double curv) {
@@ -34,5 +34,14 @@ public class Waypoint extends Point{
 	
 	public double getCurvature() {
 		return curv;
+	}
+	
+	public String toString() {
+		return String.format("X: " + super.getX() + ",   Y: " + super.getY() + ",   Dist: " + distance + ",    v: " + 
+				targetVel + ",    curv: " + curv);
+	}
+	
+	public String toFile() {
+		return String.format("%f, %f, %f, %f, %f%n", super.getX(), super.getY(), distance, targetVel, curv);
 	}
 }
